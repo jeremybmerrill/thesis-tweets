@@ -32,7 +32,7 @@ class Tweetvizyourguys(Tweetvizmodule):
     for token in self.tokens.keys():
       if token in tweet["text"]:
         self.add_to_dict(tweet["text"], token)
-    return {"users":[], "restart": False} #we never need to change what we're watching; never need to restart
+    return {"users":[], "restart": False, 'success': True} #we never need to change what we're watching; never need to restart
 
   def add_to_dict(self, tweet, token):
     tweet_after_token = tweet.split(token)[1]
@@ -49,10 +49,10 @@ class Tweetvizyourguys(Tweetvizmodule):
     pass
 
   def get_viz(self):
-    html_list_to_return = ['<ul class="tweetviz-trending">']
+    html_list_to_return = ['<ul class="tweetviz-yourguys">']
     for type_of_tweet in self.tokens.values():
       for tweet in type_of_tweet:
-        my_html_list = ['<li class="tweetviz-yourguys>']
+        my_html_list = ['<li>']
         #my_html_list.append('<a href="http://twitter.com/search?q=' + tweet + '">') #fix search query.
         my_html_list.append(tweet)
         my_html_list.append('</li>')
