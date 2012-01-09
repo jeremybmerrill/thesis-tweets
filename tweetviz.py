@@ -1,6 +1,7 @@
 import tweetstream
 from tweetvizconfig import twitter_username, hashtags as config_hashtags, initial_users_to_follow, modules
-from time import mktime, gmtime
+from time import mktime, gmtime, localtime, asctime
+import codecs
 
 class Tweetviz:
   my_modules = []
@@ -10,6 +11,7 @@ class Tweetviz:
   hashtags = config_hashtags
   old_html = dict();
   time = 0
+  start_time = 0
 
   def __init__(self):
     self.users_to_follow = initial_users_to_follow
@@ -26,7 +28,7 @@ class Tweetviz:
   def start(self):
       with tweetstream.FilterStream(self.username, self.password, track=self.hashtags,
                                       follow=self.users_to_follow) as stream:
-        start_time = 0 #TODO Note the start time.
+        self.start_time = localtime() #TODO Note the start time.
         restart_asap = False
         for tweet in stream:
           if tweet and tweet.get("text", False):
@@ -39,7 +41,7 @@ class Tweetviz:
               if "users" in module_return:
                 self.users_to_follow.extend(module_return["users"])
               restart_asap = module_return.get("restart", False)
-            if(mktime(gmtime()) % 60 == 0) and self.time != mktime(gmtime()):
+            if(mktime(gmtime()) % 300 == 0) and self.time != mktime(gmtime()): #every five minutes, get a new trending topics
               self.time = mktime(gmtime())
               self.getHTML()
             else:
@@ -49,15 +51,21 @@ class Tweetviz:
               break #TODO: (check if this really just boosts us out to a new tweetstream.Filterstream thing.
               self.start() #will it work for restarting the loop (with new users to track or whatever) to just do this?
 
-
             #TODO: Check if loop hasn't been restarted in a while, if not, restart (including new users to track, or whatever.)
 
   def dealWithHTML(self, html):
-    #caching.
-    #module_name = html.split('\n')[0]
-    #if module_name not in self.old_html or self.old_html[module_name] != html:
-      print(html)
-    #self.old_html[module_name] = html
+      if "trending" in html:
+        filename = "trending.html"
+      elif "yourguys" in html:
+        filename = "yourguys.html"
+      with codecs.open(filename, mode="w", encoding="utf-8") as f:
+            f.write("<html>\n<head>\n<title>Tweetviz</title>\n</head>\n<body>")
+            f.write("<span class='starttime'>" + asctime(self.start_time) + "</span>")
+            f.write("<span class='updatetime'>" + asctime(localtime()) + "</span>")
+            f.write(unicode(html))
+            f.write("</body>\n</html>")
+      print("Updating " + filename + " at " + asctime(localtime()))
+        
 
   def getHTML(self):
     returnstring = ""
